@@ -9,6 +9,7 @@
 # layout, use the i3-config-wizard
 #
 
+
 # Font for window titles. Will also be used by the bar unless a different font
 # is used in the bar {} block below.
 font pango:monospace 8
@@ -20,6 +21,9 @@ font pango:monospace 8
 # Start XDG autostart .desktop files using dex. See also
 # https://wiki.archlinux.org/index.php/XDG_Autostart
 exec --no-startup-id dex --autostart --environment i3
+exec i3-msg 'debuglog on; shmlog on; reload'
+
+set $mod Mod1
 
 default_border pixel 0
 smart_gaps on
@@ -36,9 +40,8 @@ hide_edge_borders smart_no_gaps
 #    height 25
 #}
 
-
 exec --no-startup-id feh --bg-fill ~/Pictures/wallpaper1.png 
-exec --no-startup-id swaybg -i ~/Pictures/wallpaper1.png
+#exec --no-startup-id swaybg -i ~/Pictures/wallpaper1.png
 
 # The combination of xss-lock, nm-applet and pactl is a popular choice, so
 # they are included here as an example. Modify as you see fit.
@@ -50,24 +53,58 @@ exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
 # NetworkManager is the most popular way to manage wireless networks on Linux,
 # and nm-applet is a desktop environment-independent system tray GUI for it.
 exec --no-startup-id nm-applet
+#set $WINDOWID false
+#include $WINDOWID 
+#exec_always echo `env` > /tmp/env
 
 
-bindsym Mod1+Shift+b exec foot -a 'bluetui-foot' bluetui
-for_window [app_id="bluetui-foot"] floating enable
 
-bindsym Mod1+Shift+n exec foot -a 'iwctl-foot' bash -c 'iwctl station wlan0 get-networks && iwctl'
-for_window [app_id="iwctl-foot"] floating enable
+# ~~I FUCKING LOVE RACE CONDITIONS~~
+
+# fixes the security
+exec_always mkdir /tmp/sins
+
+#i3 includes dont propagate variables upwards so..
+#this can go here since exec_always always happens last we have to do a reload hack
+include /tmp/sins/i3tmp.conf
+include /tmp/sins/swaytmp.conf
+
+exec_always "cat $DESKTOP_SESSION | grep i3 && echo 'set $wm default' > /tmp/sins/tmp.conf  || echo 'bindsym $mod+Return exec st' > /tmp/sins/i3tmp.conf"
+exec_always "$SWAYSOCK && echo 'set $wm default' > /tmp/sins/tmp.conf || echo 'bindsym $mod+Return exec foot' > /tmp/sins/swaytmp.conf"
+exec_always "i3 --moreversion | grep i3tmp.conf && rm -rf /tmp/sins/i3tmp.conf || i3-msg 'reload'"
+#todo sway equivelant
+
+#=== This stuff doesn't do anything useful =====
+#mode "i3"
+#mode "i3" {
+#	set $terminal st
+#	set $string "we in i3"
+#}
+#mode "sway" {
+#	set $terminal foot
+#	set $string "we in sway"
+#}
+#bindsym Mod1+g exec firefox
+
+#exec_always echo $terminal > /tmp/wm
+
+bindsym Mod1+Shift+b exec $terminal -a 'bluetui-foot' bluetui
+for_window [id="bluetui-foot"] floating enable
+#used to be app_id
+bindsym Mod1+Shift+n exec $terminal -a 'iwctl-foot' bash -c 'iwctl station wlan0 get-networks && iwctl'
+for_window [id="iwctl-foot"] floating enable
 #, resize set width 00px height 600px
 
-bindsym Mod1+Ctrl+n exec foot -a 'nmtui-foot' nmtui
-for_window [app_id="nmtui-foot"] floating enable
+bindsym Mod1+Ctrl+n exec $terminal -a 'nmtui-foot' nmtui
+for_window [id="nmtui-foot"] floating enable
 
 bindsym Mod1+Ctrl+m exec pavucontrol
-for_window [app_id="pavucontrol"] floating enable
+for_window [id="pavucontrol"] floating enable
 
 
-bindsym Mod1+Shift+m exec foot -a 'pulsemixer-foot' pulsemixer
-for_window [app_id="pulsemixer-foot"] floating enable
+#dirty, stinky, python
+#bindsym Mod1+Shift+m exec $terminal -a 'pulsemixer-foot' pulsemixer
+#for_window [id="pulsemixer-foot"] floating enable
 
 # Use pactl to adjust volume in PulseAudio.
 set $refresh_i3status killall -SIGUSR1 i3status
@@ -91,7 +128,7 @@ floating_modifier Mod1
 #tiling_drag modifier titlebar
 
 # start a terminal
-bindsym Mod1+Return exec foot
+#bindsym Mod1+Return exec $terminal
 
 # kill focused window
 bindsym Mod1+Shift+q kill
@@ -253,4 +290,8 @@ bar {
 #
 # Please remove the following exec line:
 #######################################################################
-exec i3-config-wizard
+#exec i3-config-wizard
+
+
+
+
