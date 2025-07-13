@@ -1,0 +1,3 @@
+
+# fix steam
+sudo chmod u+s /usr/bin/bwrap
